@@ -2,22 +2,9 @@ from config import *
 import requests
 
 
-#  документация https://yandex.ru/dev/translate/doc/dg/reference/translate-docpage/
-
-URL = 'https://translate.yandex.net/api/v1.5/tr.json/translate'
-
+# функция перевода текста
 def translate_it(text, from_lang, to_lang):
-    """
-    https://translate.yandex.net/api/v1.5/tr.json/translate ?
-    key=<API-ключ>
-     & text=<переводимый текст>
-     & lang=<направление перевода>
-     & [format=<формат текста>]
-     & [options=<опции перевода>]
-     & [callback=<имя callback-функции>]
-    :param to_lang:
-    :return:
-    """
+    URL = 'https://translate.yandex.net/api/v1.5/tr.json/translate'
     params = {
         'key': MY_API,
         'text': text,
@@ -26,11 +13,28 @@ def translate_it(text, from_lang, to_lang):
 
     response = requests.get(URL, params=params)
     json_ = response.json()
+    
     return ''.join(json_['text'])
 
 
 
-# функция возвращает текст из файла
+# функция определения языка
+def detect_lang(text):
+    url = 'https://translate.yandex.net/api/v1.5/tr/detect'
+    params = {
+        'key': MY_API,
+        'text': text,
+        'hint': 'de,en',
+    }
+
+    response = requests.get(url, params=params)
+    lang = response.text.split('"')[7]
+
+    return lang
+
+
+
+# функция получения текста из файла
 def get_text(file_name):
     with open(file_name, encoding='utf-8') as f:
         file = f.read()
@@ -42,6 +46,7 @@ def get_text(file_name):
 # функция для вычлинения данных href из сылки на скачивание
 def get_href(link):
     href = link.split('"')[5] + link.split('"')[6] + link.split('"')[7]
+    href = href.replace('href:', '')
     return href
 
 
@@ -58,7 +63,7 @@ def upload(file_name, file_data):
     request = session.get(url, headers=headers)
 
     # загружаем на я.диск
-    href = get_href(request.text).replace('href:', '')
+    href = get_href(request.text)
     request_put = session.put(href, data=data.encode('utf-8'), headers=headers)
 
 
@@ -68,11 +73,11 @@ files_list = ['DE.txt', 'FR.txt', 'ES.txt']
 
 if __name__ == '__main__':
     for file in files_list:
-        f_lang = file.split('.')[0].lower()
+        from_lang = detect_lang(get_text(file))
 
-        with open(f'From_{f_lang.upper()}.txt', 'w', encoding='utf-8') as to_file:
+        with open(f'From_{from_lang.upper()}.txt', 'w', encoding='utf-8') as to_file:
             try:
-                to_file.write(translate_it(get_text(file), f_lang, 'ru'))
+                to_file.write(translate_it(get_text(file), from_lang, 'ru'))
 
             except Exception as e:
                 print(f'error: {e}')
