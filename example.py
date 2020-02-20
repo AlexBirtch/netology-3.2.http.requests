@@ -1,6 +1,6 @@
 from config import *
 import requests
-from pprint import pprint
+import os
 
 
 # функция перевода текста
@@ -65,9 +65,10 @@ files_list = ['DE.txt', 'FR.txt', 'ES.txt']
 
 if __name__ == '__main__':
     for file in files_list:
+        full_path_name = os.path.join('translated', file)
         from_lang = detect_lang(get_text(file))
 
-        with open(f'From_{from_lang.upper()}.txt', 'w', encoding='utf-8') as to_file:
+        with open(full_path_name, 'w', encoding='utf-8') as to_file:
             try:
                 to_file.write(translate_it(get_text(file), from_lang, 'ru'))
 
@@ -75,6 +76,6 @@ if __name__ == '__main__':
                 print(f'error: {e}')
 
         try:
-            upload (str(to_file.name), get_text(to_file.name))
+            upload (str(file), get_text(to_file.name))
         except Exception as e:
             print(f'Error: {e}')
