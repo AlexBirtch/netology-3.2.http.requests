@@ -1,5 +1,6 @@
 from config import *
 import requests
+from pprint import pprint
 
 
 # функция перевода текста
@@ -43,14 +44,6 @@ def get_text(file_name):
 
 
 
-# функция для вычлинения данных href из сылки на скачивание
-def get_href(link):
-    href = link.split('"')[5] + link.split('"')[6] + link.split('"')[7]
-    href = href.replace('href:', '')
-    return href
-
-
-
 # функция загрузки файлов на я.диск
 def upload(file_name, file_data):
     url = f'https://cloud-api.yandex.net/v1/disk/resources/upload?path=/netology/{file_name}&overwrite=true'
@@ -63,9 +56,8 @@ def upload(file_name, file_data):
     request = session.get(url, headers=headers)
 
     # загружаем на я.диск
-    href = get_href(request.text)
+    href = request.json()['href']
     request_put = session.put(href, data=data.encode('utf-8'), headers=headers)
-
 
 
 
